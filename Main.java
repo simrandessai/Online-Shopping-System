@@ -295,7 +295,8 @@ public class Main {
                         System.out.println("1. View Products");
                         System.out.println("2. Add New Product");
                         System.out.println("3. Create Category");
-                        System.out.println("4. Logout");
+                        System.out.println("4. View Reviews on Your Products");
+                        System.out.println("5. Logout");
                         System.out.print("Choose an option: ");
 
                         int option = readInt();
@@ -311,6 +312,9 @@ public class Main {
                                         createCategory();
                                         break;
                                 case 4:
+                                        seller.viewProductReviews();
+                                        break;
+                                case 5:
                                         seller.logout();
                                         return;
                                 default:

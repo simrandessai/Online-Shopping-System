@@ -48,4 +48,35 @@ public class Seller extends User {
         System.out.println("Seller Ticket Created.");
         return ticket;
     }
+
+    // View all reviews on this seller's products
+    public void viewProductReviews() {
+        System.out.println("\n------ REVIEWS ON YOUR PRODUCTS ------");
+        
+        boolean hasReviews = false;
+        
+        for (Product product : products) {
+            ArrayList<Review> reviews = product.getReviews();
+            
+            if (!reviews.isEmpty()) {
+                hasReviews = true;
+                System.out.println("\n*** " + product.getProductName() + " ***");
+                System.out.println("Average Rating: " + String.format("%.1f", product.getAverageRating()) + "/5");
+                System.out.println("Total Reviews: " + reviews.size());
+                System.out.println("---");
+                
+                for (Review review : reviews) {
+                    System.out.println("Buyer: " + review.getBuyer().getName());
+                    System.out.println("Rating: " + review.getRating() + "/5");
+                    System.out.println("Comment: " + review.getComment());
+                    System.out.println("Date: " + review.getReviewDate());
+                    System.out.println("---");
+                }
+            }
+        }
+        
+        if (!hasReviews) {
+            System.out.println("You don't have any reviews yet.");
+        }
+    }
 }
