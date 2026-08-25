@@ -52,7 +52,7 @@ public class Review {
 
     // SETTERS
     public void setRating(int rating) {
-        if (rating >= 1 && rating <= 5)
+        if (rating >= 0 && rating <= 5)
             this.rating = rating;
     }
 
@@ -67,7 +67,6 @@ public class Review {
 
         return "Review ID : " + reviewId +
                 "\nBuyer      : " + buyer.getName() +
-                "\nProduct    : " + product.getProductName() +
                 "\nRating     : " + rating + "/5" +
                 "\nComment    : " + comment +
                 "\nDate       : " + reviewDate;

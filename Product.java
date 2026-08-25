@@ -62,7 +62,7 @@ public class Product {
     }
 
     public void displayReviews() {
-        System.out.println("\n------ REVIEWS ------");
+        System.out.println("\nREVIEWS");
         if (reviews.isEmpty()) {
             System.out.println("No Reviews Available.");
             return;
@@ -70,7 +70,6 @@ public class Product {
 
         for (Review review : reviews) {
             System.out.println(review);
-            System.out.println("----------------------------");
         }
     }
 

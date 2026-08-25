@@ -176,8 +176,8 @@ public class Buyer extends User {
             System.out.println("You can only review products you have purchased.");
             return;
         }
-        if (rating < 1 || rating > 5) {
-            System.out.println("Rating should be between 1 and 5.");
+        if (rating < 0 || rating > 5) {
+            System.out.println("Rating should be between 0 and 5.");
             return;
         }
         Review review = new Review(

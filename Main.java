@@ -1,5 +1,5 @@
-/* Author: Simran V Naik Dessai
-*  Roll No: 2650
+/*Author: Simran V Naik Dessai
+* Roll No: 2650
 * Description: This is a console-based online shopping system implemented in Java. 
 * It is the entry point for the application. It sets up some demo data on startup and provides 
 * a simple menu-driven interface for users to interact with the system. This drives the whole 
@@ -295,7 +295,8 @@ public class Main {
                         System.out.println("1. View Products");
                         System.out.println("2. Add New Product");
                         System.out.println("3. Create Category");
-                        System.out.println("4. Logout");
+                        System.out.println("4. View Reviews");
+                        System.out.println("5. Logout");
                         System.out.print("Choose an option: ");
 
                         int option = readInt();
@@ -311,6 +312,9 @@ public class Main {
                                         createCategory();
                                         break;
                                 case 4:
+                                        viewSellerReviews(seller);
+                                        break;
+                                case 5:
                                         seller.logout();
                                         return;
                                 default:
@@ -334,7 +338,8 @@ public class Main {
                         System.out.println("6. Add Product to Wishlist");
                         System.out.println("7. View Wishlist");
                         System.out.println("8. Give Review");
-                        System.out.println("9. Logout");
+                        System.out.println("9. View Product Reviews");
+                        System.out.println("10. Logout");
                         System.out.print("Choose an option: ");
 
                         int option = readInt();
@@ -365,6 +370,9 @@ public class Main {
                                         giveReview(buyer);
                                         break;
                                 case 9:
+                                        viewAllProductReviews(buyer);
+                                        break;
+                                case 10:
                                         buyer.logout();
                                         return;
                                 default:
@@ -422,6 +430,72 @@ public class Main {
                 } else {
                         System.out.println("\n Products of " + seller.getName() + " :");
                         printProductTable(ownProducts);
+                }
+        }
+
+        // Displays reviews left by buyers for this seller's products.
+        private static void viewSellerReviews(Seller seller) {
+                ArrayList<Product> ownProducts = seller.getProducts();
+
+                if (ownProducts.isEmpty()) {
+                        System.out.println("You have no products to show reviews for.");
+                        return;
+                }
+
+                System.out.println("\n REVIEWS FOR PRODUCTS OF " + seller.getName().toUpperCase() + " ");
+                boolean reviewsFound = false;
+                for (Product product : ownProducts) {
+                        if (product.getReviews().isEmpty()) {
+                                continue;
+                        }
+
+                        reviewsFound = true;
+                        System.out.println("\nProduct: " + product.getProductName());
+                        product.displayReviews();
+                }
+
+                if (!reviewsFound) {
+                        System.out.println("No buyer reviews are available for your products.");
+                }
+        }
+
+        // Displays only reviews written by other buyers for products with reviews.
+        private static void viewAllProductReviews(Buyer buyer) {
+                if (products.isEmpty()) {
+                        System.out.println("No products available.");
+                        return;
+                }
+
+                System.out.println("\n   ALL PRODUCT REVIEWS   ");
+                boolean reviewsFound = false;
+                for (Product product : products) {
+                        ArrayList<Review> otherBuyerReviews = new ArrayList<>();
+                        int totalRating = 0;
+                        for (Review review : product.getReviews()) {
+                                if (review.getBuyer() != buyer) {
+                                        otherBuyerReviews.add(review);
+                                        totalRating += review.getRating();
+                                }
+                        }
+
+                        if (otherBuyerReviews.isEmpty()) {
+                                continue;
+                        }
+
+                        reviewsFound = true;
+                        System.out.println("\nProduct: " + product.getProductName()
+                                        + " | Seller: " + product.getSeller().getName()
+                                        + " | Average Rating: " + String.format("%.1f",
+                                                        (double) totalRating / otherBuyerReviews.size())
+                                        + "/5");
+                        System.out.println("\n    REVIEWS ");
+                        for (Review review : otherBuyerReviews) {
+                                System.out.println(review);
+                        }
+                }
+
+                if (!reviewsFound) {
+                        System.out.println("No reviews from other buyers are available.");
                 }
         }
 
@@ -734,8 +808,14 @@ public class Main {
                         System.out.println("That product isn't in your purchase history.");
                         return;
                 }
-                System.out.print("Rating (1-5): ");
-                int rating = readInt();
+                int rating;
+                do {
+                        System.out.print("Rating (0-5): ");
+                        rating = readInt();
+                        if (rating < 0 || rating > 5) {
+                                System.out.println("Rating must be between 0 and 5.");
+                        }
+                } while (rating < 0 || rating > 5);
                 System.out.print("Comment: ");
                 String comment = scanner.nextLine().trim();
                 buyer.giveReview(product, rating, comment);
