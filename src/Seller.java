@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 
 // Represents a Seller user in the system. 
-// They can manage their products and raise customer care tickets.
+// They can manage their products.
 public class Seller extends User {
 
     private ArrayList<Product> products;
@@ -43,9 +43,4 @@ public class Seller extends User {
         return products;
     }
 
-    public CustomerCare raiseTicket(String issue) {
-        CustomerCare ticket = new CustomerCare(this, issue);
-        System.out.println("Seller Ticket Created.");
-        return ticket;
-    }
 }

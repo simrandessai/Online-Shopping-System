@@ -1,10 +1,5 @@
-import java.util.ArrayList;
-
-// Represents an Admin user in the system. They can manage users, products, and handle customer care tickets.
+// Represents an Admin user in the system. They can manage users and products.
 public class Admin extends User {
-
-    // Tickets that the admin has received for customer care.
-    private ArrayList<CustomerCare> tickets;
 
     // Constructor
     public Admin(int userId,
@@ -21,7 +16,6 @@ public class Admin extends User {
                 address,
                 Role.ADMIN);
 
-        tickets = new ArrayList<>();
     }
 
     // User Management
@@ -34,28 +28,4 @@ public class Admin extends User {
         System.out.println("Managing Products...");
     }
 
-    // Ticket Methods
-
-    public void receiveTicket(CustomerCare ticket) {
-        tickets.add(ticket);
-    }
-
-    public void viewTickets() {
-        if (tickets.isEmpty()) {
-            System.out.println("No Tickets.");
-            return;
-        }
-        for (CustomerCare ticket : tickets)
-            System.out.println(ticket);
-    }
-
-    public void resolveTicket(CustomerCare ticket,
-            String reply) {
-        ticket.setResponse(reply);
-        ticket.setStatus(TicketStatus.RESOLVED);
-        System.out.println(
-                "Ticket "
-                        + ticket.getTicketId()
-                        + " Resolved.");
-    }
 }

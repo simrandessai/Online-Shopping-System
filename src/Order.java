@@ -39,8 +39,7 @@ public class Order {
     // Add Item to Order
     public void addItem(Product product, int quantity) {
         if (product.getStock() < quantity) {
-            System.out.println("Insufficient stock for "
-                    + product.getProductName());
+            System.out.println("Insufficient stock for " + product.getProductName());
             return;
         }
         items.add(new OrderItem(product, quantity));
@@ -86,7 +85,6 @@ public class Order {
         for (OrderItem item : items) {
             System.out.println(item);
         }
-        System.out.println("-----------------------------------------------------------------");
         System.out.println("Total Amount : Rs " + calculateTotal());
         System.out.println("Status       : " + orderStatus);
         if (payment != null) {

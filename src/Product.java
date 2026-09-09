@@ -144,7 +144,7 @@ public class Product {
     @Override
     public String toString() {
 
-        return "\n------ PRODUCT ------" +
+        return "\nPRODUCT" +
                 "\nProduct ID : " + productId +
                 "\nName       : " + productName +
                 "\nDescription: " + description +
@@ -153,9 +153,7 @@ public class Product {
                 "\nCategory   : " + category.getCategoryName() +
                 "\nSeller     : " + seller.getName() +
                 "\nRating     : " +
-                String.format("%.1f", getAverageRating()) +
-                "/5";
-
+                String.format("%.1f", getAverageRating()) + "/5";
     }
 
 }

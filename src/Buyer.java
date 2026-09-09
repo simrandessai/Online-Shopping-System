@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 /**
  * Represents a Buyer user in the system. They can manage their cart,
- * wishlist, place orders, and raise customer care tickets.
+ * wishlist, and place orders.
  */
 public class Buyer extends User {
 
@@ -159,13 +159,6 @@ public class Buyer extends User {
             }
         }
         return purchased;
-    }
-
-    // Raises a customer care ticket with the specified issue.
-    public CustomerCare raiseTicket(String issue) {
-        CustomerCare ticket = new CustomerCare(this, issue);
-        System.out.println("Customer Care Ticket Created.");
-        return ticket;
     }
 
     // Gives a review for a purchased product.

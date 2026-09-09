@@ -38,10 +38,8 @@ public class Cart {
         return total;
     }
 
-    /**
-     * Function to display the contents of the cart, including each item's details
-     * and the grand total.
-     */
+    // Function to display the contents of the cart, including each item's details
+    // and the grand total.
     public void displayCart() {
         System.out.println("\n CART ");
         if (items.isEmpty()) {
@@ -49,8 +47,6 @@ public class Cart {
         } else {
             for (CartItem item : items)
                 System.out.println(item);
-
-            System.out.println("-------------------------------------------");
             System.out.println("Grand Total : Rs " + calculateTotal());
         }
     }
