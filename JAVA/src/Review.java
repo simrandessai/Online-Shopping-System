@@ -52,7 +52,7 @@ public class Review {
 
     // SETTERS
     public void setRating(int rating) {
-        if (rating >= 0 && rating <= 5)
+        if (rating >= 1 && rating <= 5)
             this.rating = rating;
     }
 

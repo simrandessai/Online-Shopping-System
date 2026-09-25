@@ -1,10 +1,12 @@
-/* Author: Simran V Naik Dessai
-* Roll No: 2650
-* Description: This is a online shopping system implemented in Java. 
-* It is the entry point for the application. 
-* It sets up some demo data on startup and provides a simple menu-driven interface for users to interact with the system. 
-* The system is designed to be simple and easy to use, demonstrating basic e-commerce functionality in a console environment.
-*/
+
+/**
+ * Author: Simran V Naik Dessai
+ * Roll No: 2650
+ * Description: This is a online shopping system implemented in Java.  
+ * It sets up some demo data on startup and provides a simple menu-driven interface for users to interact with the system. 
+ * Anyone can browse products and fill a cart without signing in. 
+ * Sign-in (or registration) is only asked for when the visitor places an order.
+ */
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -20,6 +22,15 @@ public class Main {
         private static final ArrayList<Admin> admins = new ArrayList<>();
         private static final ArrayList<Category> categories = new ArrayList<>();
         private static final ArrayList<Product> products = new ArrayList<>();
+
+        // Cart used by visitors who haven't signed in. Its items are moved into the
+        // buyer's own cart as soon as the visitor logs in or registers.
+        private static final Cart guestCart = new Cart(0);
+
+        private static int nextProductId = 1021;
+        // Demo users use IDs 1-8, so new users continue from 9. A counter (instead of
+        // list size) keeps IDs unique even after users are deleted.
+        private static int nextUserId = 9;
 
         public static void main(String[] args) {
                 initializeDemoData();
@@ -83,7 +94,7 @@ public class Main {
                                 seller2);
                 Product p20 = new Product(1020, "Microwave Oven", "20L microwave with grill", 6999, 8, home, seller2);
 
-                // Adding all products to the products list
+                // Adding all products to the products list and to their sellers
                 Product[] allProducts = { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17,
                                 p18, p19, p20 };
                 for (Product product : allProducts) {
@@ -97,7 +108,7 @@ public class Main {
                 clothing.addProduct(p11, p12, p13, p14, p15);
                 home.addProduct(p16, p17, p18, p19, p20);
 
-                // Adding products to sellers
+                // Adding users to the system
                 admins.add(admin);
                 sellers.add(seller1);
                 sellers.add(seller2);
@@ -105,37 +116,58 @@ public class Main {
                 buyers.add(buyer2);
         }
 
-        // This method will display the main menu and handles user input for different
-        // roles.
-
+        // This method displays the main menu, which is open to everyone.
+        // Browsing comes first, and visitors can shop without signing in.
+        // Login is only needed to place an order (or to use buyer, seller and admin
+        // features).
         private static void showMainMenu() {
                 while (true) {
                         System.out.println("\nOnline Shopping System");
-                        System.out.println("1. Register Seller");
-                        System.out.println("2. Register Buyer");
-                        System.out.println("3. Login as Admin");
-                        System.out.println("4. Login as Seller");
-                        System.out.println("5. Login as Buyer");
-                        System.out.println("6. Exit");
+                        System.out.println("1. Browse Products");
+                        System.out.println("2. Add Product to Cart");
+                        System.out.println("3. View Cart");
+                        System.out.println("4. Remove Item from Cart");
+                        System.out.println("5. Place Order");
+                        System.out.println("6. Login as Buyer");
+                        System.out.println("7. Register Buyer");
+                        System.out.println("8. Login as Seller");
+                        System.out.println("9. Register Seller");
+                        System.out.println("10. Login as Admin");
+                        System.out.println("11. Exit");
                         System.out.print("Choose an option: ");
                         int option = readInt();
                         switch (option) {
                                 case 1:
-                                        createSeller();
+                                        viewProductsByCategory();
                                         break;
                                 case 2:
-                                        createBuyer();
+                                        addProductToGuestCart();
                                         break;
                                 case 3:
-                                        adminMenu(loginAdmin());
+                                        guestCart.displayCart();
                                         break;
                                 case 4:
-                                        sellerMenu(loginSeller());
+                                        removeFromGuestCart();
                                         break;
                                 case 5:
-                                        buyerMenu(loginBuyer());
+                                        guestPlaceOrder();
                                         break;
                                 case 6:
+                                        buyerMenu(loginBuyer());
+                                        break;
+                                case 7:
+                                        createBuyer();
+                                        break;
+                                case 8:
+                                        sellerMenu(loginSeller());
+                                        break;
+                                case 9:
+                                        createSeller();
+                                        break;
+                                case 10:
+                                        adminMenu(loginAdmin());
+                                        break;
+                                case 11:
                                         System.out.println("Application exited.");
                                         return;
                                 default:
@@ -144,53 +176,159 @@ public class Main {
                 }
         }
 
+        // Visitor (not signed in) adds a product to the guest cart.
+        private static void addProductToGuestCart() {
+                Product product = chooseProduct("add to cart");
+                if (product == null) {
+                        return;
+                }
+                int quantity = readQuantity();
+                if (quantity <= 0) {
+                        return;
+                }
+                if (guestCart.addProduct(product, quantity)) {
+                        System.out.println(quantity + " x " + product.getProductName() + " added to cart.");
+                }
+        }
+
+        // Visitor (not signed in) removes a product from the guest cart.
+        private static void removeFromGuestCart() {
+                Product product = chooseProductInCart(guestCart, "remove");
+                if (product == null) {
+                        return;
+                }
+                guestCart.removeProduct(product);
+                System.out.println(product.getProductName() + " removed from cart.");
+        }
+
+        // A visitor tries to place an order: the cart total is shown, then the visitor
+        // must sign in as an existing buyer or register.
+        // After that the order continues exactly like a normal buyer order (create
+        // order -> payment).
+        private static void guestPlaceOrder() {
+                if (guestCart.getItems().isEmpty()) {
+                        System.out.println("Your cart is empty. Add products to your cart first.");
+                        return;
+                }
+                guestCart.displayCart();
+                Buyer buyer = signInForCheckout();
+                if (buyer == null) {
+                        System.out.println("Order not placed. Your cart has been saved.");
+                        return;
+                }
+                placeOrder(buyer);
+                buyerMenu(buyer);
+        }
+
+        // Verifies the visitor at checkout: log in as an existing buyer, or register.
+        // Returns the signed-in buyer, or null if the visitor goes back.
+        private static Buyer signInForCheckout() {
+                while (true) {
+                        System.out.println("\nPlease sign in to place your order.");
+                        System.out.println("1. Login as existing buyer");
+                        System.out.println("2. Register as new buyer");
+                        System.out.println("0. Back to shopping");
+                        System.out.print("Choose an option: ");
+                        int option = readInt();
+                        switch (option) {
+                                case 1: {
+                                        Buyer existing = loginBuyer();
+                                        if (existing != null) {
+                                                return existing;
+                                        }
+                                        break;
+                                }
+                                case 2: {
+                                        Buyer registered = createBuyer();
+                                        if (registered != null) {
+                                                registered.login();
+                                                mergeGuestCart(registered);
+                                                return registered;
+                                        }
+                                        break;
+                                }
+                                case 0:
+                                        return null;
+                                default:
+                                        System.out.println("Invalid option. Please select again.");
+                        }
+                }
+        }
+
+        // Moves everything from the guest cart into the buyer's own cart.
+        private static void mergeGuestCart(Buyer buyer) {
+                if (guestCart.getItems().isEmpty()) {
+                        return;
+                }
+                int moved = 0;
+                for (CartItem item : guestCart.getItems()) {
+                        if (buyer.getCart().addProduct(item.getProduct(), item.getQuantity())) {
+                                moved++;
+                        }
+                }
+                guestCart.clearCart();
+                System.out.println(moved + " item(s) from your guest cart were added to your cart.");
+        }
+
         // This method prompts the user to enter details for creating a new seller.
         private static void createSeller() {
                 System.out.println("\n   CREATE SELLER   ");
                 System.out.print("Name: ");
-                String name = scanner.nextLine().trim();
+                String name = readLine().trim();
                 System.out.print("Email: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 System.out.print("Password: ");
-                String password = scanner.nextLine().trim();
+                String password = readLine().trim();
                 System.out.print("Phone: ");
-                String phone = scanner.nextLine().trim();
+                String phone = readLine().trim();
                 System.out.print("Address: ");
-                String address = scanner.nextLine().trim();
+                String address = readLine().trim();
 
-                Seller seller = new Seller(sellers.size() + 2, name, email, password, phone, address);
+                if (!validRegistration(name, email, password, phone, address)
+                                || emailExists(email)) {
+                        return;
+                }
+
+                Seller seller = new Seller(nextUserId++, name, email, password, phone, address);
                 sellers.add(seller);
-                System.out.println("Seller created successfully.");
+                seller.register();
         }
 
         // This method prompts the user to enter details for creating a new buyer.
-        private static void createBuyer() {
+        // Returns the new buyer, or null if the details were not valid.
+        private static Buyer createBuyer() {
                 System.out.println("\n   CREATE BUYER   ");
                 System.out.print("Name: ");
-                String name = scanner.nextLine().trim();
+                String name = readLine().trim();
                 System.out.print("Email: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 System.out.print("Password: ");
-                String password = scanner.nextLine().trim();
+                String password = readLine().trim();
                 System.out.print("Phone: ");
-                String phone = scanner.nextLine().trim();
+                String phone = readLine().trim();
                 System.out.print("Address: ");
-                String address = scanner.nextLine().trim();
+                String address = readLine().trim();
 
-                Buyer buyer = new Buyer(buyers.size() + 3, name, email, password, phone, address);
+                if (!validRegistration(name, email, password, phone, address)
+                                || emailExists(email)) {
+                        return null;
+                }
+
+                Buyer buyer = new Buyer(nextUserId++, name, email, password, phone, address);
                 buyers.add(buyer);
-                System.out.println("Buyer created successfully.");
+                buyer.register();
+                return buyer;
         }
 
         // This method handles the login process for the admin user.
         private static Admin loginAdmin() {
                 System.out.print("Enter admin email: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 System.out.print("Enter admin password: ");
-                String password = scanner.nextLine().trim();
+                String password = readLine().trim();
                 Admin foundAdmin = null;
                 for (Admin admin : admins) {
-                        if (admin.getEmail().equals(email)) {
+                        if (admin.getEmail().equalsIgnoreCase(email)) {
                                 foundAdmin = admin;
                                 break;
                         }
@@ -199,18 +337,19 @@ public class Main {
                         foundAdmin.login();
                         return foundAdmin;
                 }
+                System.out.println("Invalid email or password.");
                 return null;
         }
 
         // This method handles the login process for the seller user.
         private static Seller loginSeller() {
                 System.out.print("Enter seller email: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 System.out.print("Enter seller password: ");
-                String password = scanner.nextLine().trim();
+                String password = readLine().trim();
                 Seller foundSeller = null;
                 for (Seller seller : sellers) {
-                        if (seller.getEmail().equals(email)) {
+                        if (seller.getEmail().equalsIgnoreCase(email)) {
                                 foundSeller = seller;
                                 break;
                         }
@@ -219,26 +358,31 @@ public class Main {
                         foundSeller.login();
                         return foundSeller;
                 }
+                System.out.println("Invalid email or password.");
                 return null;
         }
 
         // This method handles the login process for the buyer user.
+        // Any items in the guest cart are moved into the buyer's cart on a successful
+        // login.
         private static Buyer loginBuyer() {
                 System.out.print("Enter buyer email: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 System.out.print("Enter buyer password: ");
-                String password = scanner.nextLine().trim();
+                String password = readLine().trim();
                 Buyer foundBuyer = null;
                 for (Buyer buyer : buyers) {
-                        if (buyer.getEmail().equals(email)) {
+                        if (buyer.getEmail().equalsIgnoreCase(email)) {
                                 foundBuyer = buyer;
                                 break;
                         }
                 }
                 if (foundBuyer != null && foundBuyer.getPassword().equals(password)) {
                         foundBuyer.login();
+                        mergeGuestCart(foundBuyer);
                         return foundBuyer;
                 }
+                System.out.println("Invalid email or password.");
                 return null;
         }
 
@@ -250,7 +394,10 @@ public class Main {
                         System.out.println("\n   ADMIN MENU   ");
                         System.out.println("1. Delete Seller");
                         System.out.println("2. Delete Buyer");
-                        System.out.println("3. Logout");
+                        System.out.println("3. Manage Products");
+                        System.out.println("4. View Support Tickets");
+                        System.out.println("5. Reply and Resolve Ticket");
+                        System.out.println("6. Logout");
                         System.out.print("Choose an option: ");
                         int option = readInt();
                         switch (option) {
@@ -261,6 +408,15 @@ public class Main {
                                         deleteBuyer();
                                         break;
                                 case 3:
+                                        manageProducts(admin);
+                                        break;
+                                case 4:
+                                        viewSupportTickets(admin);
+                                        break;
+                                case 5:
+                                        resolveSupportTicket(admin);
+                                        break;
+                                case 6:
                                         admin.logout();
                                         return;
                                 default:
@@ -272,7 +428,7 @@ public class Main {
         // Allows the admin to remove a seller and the seller's products.
         private static void deleteSeller() {
                 System.out.print("Enter seller email to delete: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 Seller sellerToDelete = null;
                 for (Seller seller : sellers) {
                         if (seller.getEmail().equalsIgnoreCase(email)) {
@@ -285,22 +441,40 @@ public class Main {
                         return;
                 }
                 System.out.print("Delete seller " + sellerToDelete.getName() + " and all their products? (y/n): ");
-                if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
+                if (!readLine().trim().equalsIgnoreCase("y")) {
                         System.out.println("Deletion cancelled.");
                         return;
                 }
                 for (Product product : new ArrayList<>(sellerToDelete.getProducts())) {
-                        products.remove(product);
-                        product.getCategory().removeProduct(product);
+                        removeProductEverywhere(product);
                 }
                 sellers.remove(sellerToDelete);
                 System.out.println("Seller deleted successfully.");
         }
 
+        // Removes a product from the global list, its category, its seller and every
+        // cart and wishlist that still holds it (including the guest cart).
+        private static void removeProductEverywhere(Product product) {
+                if (product == null) {
+                        return;
+                }
+                products.remove(product);
+                if (product.getCategory() != null) {
+                        product.getCategory().removeProduct(product);
+                }
+                if (product.getSeller() != null) {
+                        product.getSeller().removeProduct(product);
+                }
+                guestCart.removeProduct(product);
+                for (Buyer buyer : buyers) {
+                        buyer.removeProductReferences(product);
+                }
+        }
+
         // Allows the admin to remove a buyer.
         private static void deleteBuyer() {
                 System.out.print("Enter buyer email to delete: ");
-                String email = scanner.nextLine().trim();
+                String email = readLine().trim();
                 Buyer buyerToDelete = null;
                 for (Buyer buyer : buyers) {
                         if (buyer.getEmail().equalsIgnoreCase(email)) {
@@ -313,7 +487,7 @@ public class Main {
                         return;
                 }
                 System.out.print("Delete buyer " + buyerToDelete.getName() + "? (y/n): ");
-                if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
+                if (!readLine().trim().equalsIgnoreCase("y")) {
                         System.out.println("Deletion cancelled.");
                         return;
                 }
@@ -362,7 +536,7 @@ public class Main {
                         return;
                 while (true) {
                         System.out.println("\n   BUYER MENU   ");
-                        System.out.println("1. View Products");
+                        System.out.println("1. Browse Products");
                         System.out.println("2. Add Product to Cart");
                         System.out.println("3. View Cart");
                         System.out.println("4. Move Item from Cart to Wishlist");
@@ -371,7 +545,11 @@ public class Main {
                         System.out.println("7. View Wishlist");
                         System.out.println("8. Give Review");
                         System.out.println("9. View Product Reviews");
-                        System.out.println("10. Logout");
+                        System.out.println("10. View Order History");
+                        System.out.println("11. Raise Support Ticket");
+                        System.out.println("12. View My Support Tickets");
+                        System.out.println("13. Remove Item from Cart");
+                        System.out.println("14. Logout");
                         System.out.print("Choose an option: ");
                         int option = readInt();
                         switch (option) {
@@ -403,6 +581,18 @@ public class Main {
                                         viewAllProductReviews(buyer);
                                         break;
                                 case 10:
+                                        buyer.viewOrderHistory();
+                                        break;
+                                case 11:
+                                        raiseSupportTicket(buyer);
+                                        break;
+                                case 12:
+                                        buyer.viewTickets();
+                                        break;
+                                case 13:
+                                        removeFromCart(buyer);
+                                        break;
+                                case 14:
                                         buyer.logout();
                                         return;
                                 default:
@@ -416,9 +606,7 @@ public class Main {
                 ArrayList<Product> ownProducts = seller.getProducts();
 
                 if (ownProducts.isEmpty()) {
-                        System.out.println(
-                                        "You have no products assigned yet. Showing all available products instead:");
-                        printProductTable(products);
+                        System.out.println("You have no products assigned yet.");
                 } else {
                         System.out.println("\n Products of " + seller.getName() + " :");
                         printProductTable(ownProducts);
@@ -492,13 +680,26 @@ public class Main {
                 }
                 System.out.println("\n   ADD NEW PRODUCT   ");
                 System.out.print("Product name: ");
-                String name = scanner.nextLine().trim();
+                String name = readLine().trim();
                 System.out.print("Description: ");
-                String description = scanner.nextLine().trim();
+                String description = readLine().trim();
                 System.out.print("Price: Rs ");
                 double price = readDouble();
                 System.out.print("Stock: ");
                 int stock = readInt();
+
+                if (name.isEmpty() || description.isEmpty()) {
+                        System.out.println("Product name and description cannot be empty.");
+                        return;
+                }
+                if (!Double.isFinite(price) || price <= 0) {
+                        System.out.println("Price must be a positive number.");
+                        return;
+                }
+                if (stock < 0) {
+                        System.out.println("Stock cannot be negative.");
+                        return;
+                }
 
                 for (int i = 0; i < categories.size(); i++) {
                         System.out.println((i + 1) + ". " + categories.get(i).getCategoryName());
@@ -512,7 +713,7 @@ public class Main {
                 }
 
                 Category category = categories.get(categoryChoice - 1);
-                Product product = new Product(1000 + products.size() + 1, name, description, price, stock, category,
+                Product product = new Product(nextProductId++, name, description, price, stock, category,
                                 seller);
                 seller.addProduct(product);
                 category.addProduct(product);
@@ -535,8 +736,9 @@ public class Main {
                                         truncate(p.getProductName(), 20),
                                         "Rs " + p.getPrice(),
                                         p.getStock(),
-                                        truncate(p.getCategory().getCategoryName(), 15),
-                                        truncate(p.getSeller().getName(), 15),
+                                        truncate(p.getCategory() != null ? p.getCategory().getCategoryName() : "N/A",
+                                                        15),
+                                        truncate(p.getSeller() != null ? p.getSeller().getName() : "N/A", 15),
                                         String.format("%.1f", p.getAverageRating()));
                 }
         }
@@ -552,30 +754,56 @@ public class Main {
         // This method allows a seller to create a new category in the system.
         private static void createCategory() {
                 System.out.print("Enter category name: ");
-                String name = scanner.nextLine().trim();
+                String name = readLine().trim();
+                if (name.isEmpty()) {
+                        System.out.println("Category name cannot be empty.");
+                        return;
+                }
+                if (findCategoryByName(name) != null) {
+                        System.out.println("That category already exists.");
+                        return;
+                }
                 Category category = new Category(categories.size() + 101, name);
                 categories.add(category);
                 System.out.println("Category created successfully.");
         }
 
-        // Displays products for a category the buyer types in directly.
+        // Displays products for a category chosen by number or name.
+        // Entering 'all', selecting the All option, or pressing Enter shows every
+        // product.
         private static ArrayList<Product> selectProductsByCategory() {
                 if (categories.isEmpty()) {
                         System.out.println("No categories available.");
                         return new ArrayList<>();
                 }
                 System.out.println("\nAvailable categories: ");
-                for (Category category : categories) {
-                        System.out.print(category.getCategoryName() + "  ");
+                for (int i = 0; i < categories.size(); i++) {
+                        System.out.println((i + 1) + ". " + categories.get(i).getCategoryName());
                 }
-                System.out.println();
-                System.out.print("Enter category name (or 'all' to view everything): ");
-                String input = scanner.nextLine().trim();
-                if (input.equalsIgnoreCase("all")) {
+                int allOption = categories.size() + 1;
+                System.out.println(allOption + ". All Products");
+                System.out.println("0. Back");
+                System.out.print("Choose category number or name (or press Enter for all): ");
+                String input = readLine().trim();
+                if (input.isEmpty() || input.equalsIgnoreCase("all") || input.equals(String.valueOf(allOption))) {
+                        System.out.println("\n--- ALL PRODUCTS ---");
                         printProductTable(products);
                         return products;
                 }
-                Category selectedCategory = findCategoryByName(input);
+                if (input.equals("0") || input.equalsIgnoreCase("back")) {
+                        return new ArrayList<>();
+                }
+                Category selectedCategory = null;
+                try {
+                        int choice = Integer.parseInt(input);
+                        if (choice >= 1 && choice <= categories.size()) {
+                                selectedCategory = categories.get(choice - 1);
+                        }
+                } catch (NumberFormatException ignored) {
+                }
+                if (selectedCategory == null) {
+                        selectedCategory = findCategoryByName(input);
+                }
                 if (selectedCategory == null) {
                         System.out.println("Category not found.");
                         return new ArrayList<>();
@@ -585,7 +813,7 @@ public class Main {
                 return selectedCategory.getProducts();
         }
 
-        // Kept for the "View Products" menu option, which doesn't need the list back.
+        // Kept for the "Browse Products" menu option, which doesn't need the list back.
         private static void viewProductsByCategory() {
                 selectProductsByCategory();
         }
@@ -600,32 +828,81 @@ public class Main {
                 return null;
         }
 
-        // This method allows a buyer to add a product to their cart basedd on the
-        // product ID they input.
-        private static void addProductToCart(Buyer buyer) {
+        // Lets the user browse (by category) and pick a product by ID.
+        // Returns the chosen product, or null if nothing valid was chosen.
+        private static Product chooseProduct(String action) {
                 if (products.isEmpty()) {
                         System.out.println("No products available.");
-                        return;
+                        return null;
                 }
                 ArrayList<Product> availableProducts = selectProductsByCategory();
-                if (availableProducts.isEmpty()) {
-                        System.out.println("No products available in this selection.");
-                        return;
+                if (availableProducts == null || availableProducts.isEmpty()) {
+                        return null;
                 }
-                System.out.print("Enter product ID to add to cart: ");
+                System.out.print("Enter product ID to " + action + " (or 0 to cancel): ");
                 int productId = readInt();
+                if (productId == 0) {
+                        return null;
+                }
                 Product product = findProductInList(productId, availableProducts);
                 if (product == null) {
                         System.out.println("Invalid product ID for this selection.");
-                        return;
                 }
+                return product;
+        }
+
+        // Asks for a quantity. Returns 0 (after a message) if it isn't positive.
+        private static int readQuantity() {
                 System.out.print("Quantity: ");
                 int quantity = readInt();
                 if (quantity <= 0) {
                         System.out.println("Quantity must be positive.");
+                        return 0;
+                }
+                return quantity;
+        }
+
+        // Shows a cart and lets the user pick one of its products by ID.
+        // Returns the chosen product, or null if the cart is empty or the ID is
+        // invalid.
+        private static Product chooseProductInCart(Cart cart, String action) {
+                if (cart.getItems().isEmpty()) {
+                        System.out.println("Cart is empty.");
+                        return null;
+                }
+                cart.displayCart();
+                System.out.print("Enter product ID to " + action + " (or 0 to cancel): ");
+                int productId = readInt();
+                if (productId == 0) {
+                        return null;
+                }
+                Product product = findProductInCart(productId, cart);
+                if (product == null) {
+                        System.out.println("That product isn't in your cart.");
+                }
+                return product;
+        }
+
+        // This method allows a buyer to add a product to their cart based on the
+        // product ID they input.
+        private static void addProductToCart(Buyer buyer) {
+                Product product = chooseProduct("add to cart");
+                if (product == null) {
+                        return;
+                }
+                int quantity = readQuantity();
+                if (quantity <= 0) {
                         return;
                 }
                 buyer.addToCart(product, quantity);
+        }
+
+        // This method allows a buyer to remove an item from their cart.
+        private static void removeFromCart(Buyer buyer) {
+                Product product = chooseProductInCart(buyer.getCart(), "remove");
+                if (product != null) {
+                        buyer.removeFromCart(product);
+                }
         }
 
         // Finds a product by ID, but only within a specific list (e.g. a category's
@@ -641,19 +918,10 @@ public class Main {
 
         // This method allows a buyer to move an item from their cart to their wishlist.
         private static void moveCartItemToWishlist(Buyer buyer) {
-                if (buyer.getCart().getItems().isEmpty()) {
-                        System.out.println("Cart is empty.");
-                        return;
+                Product product = chooseProductInCart(buyer.getCart(), "move to wishlist");
+                if (product != null) {
+                        buyer.moveToWishlist(product);
                 }
-                buyer.viewCart();
-                System.out.print("Enter product ID to move to wishlist: ");
-                int productId = readInt();
-                Product product = findProductInCart(productId, buyer.getCart());
-                if (product == null) {
-                        System.out.println("That product isn't in your cart.");
-                        return;
-                }
-                buyer.moveToWishlist(product);
         }
 
         // Finds a product by ID, but only among items currently in the given cart.
@@ -668,10 +936,12 @@ public class Main {
 
         // This method allows a buyer to place an order either from their cart or by
         // selecting products directly.
+        // Payment can be retried if it fails; stock is only deducted once payment
+        // succeeds.
         private static void placeOrder(Buyer buyer) {
                 Order order;
                 if (!buyer.getCart().getItems().isEmpty()) {
-                        order = buyer.placeOrder(5000 + (int) (Math.random() * 100));
+                        order = buyer.placeOrder();
                         if (order == null) {
                                 return;
                         }
@@ -682,21 +952,44 @@ public class Main {
                                 return;
                         }
                 }
-                System.out.println("Choose payment method:");
-                for (PaymentMethod method : PaymentMethod.values()) {
-                        System.out.println(method.ordinal() + 1 + ". " + method);
+
+                boolean paid = false;
+                while (!paid) {
+                        System.out.println("Choose payment method:");
+                        for (PaymentMethod method : PaymentMethod.values()) {
+                                System.out.println((method.ordinal() + 1) + ". " + method);
+                        }
+                        System.out.println("0. Cancel order");
+                        System.out.print("Select payment option: ");
+                        int paymentChoice = readInt();
+                        if (paymentChoice == 0) {
+                                cancelUnpaidOrder(buyer, order);
+                                return;
+                        }
+                        if (paymentChoice < 1 || paymentChoice > PaymentMethod.values().length) {
+                                System.out.println("Invalid payment option.");
+                                continue;
+                        }
+                        paid = order.makePayment(PaymentMethod.values()[paymentChoice - 1]);
+                        if (!paid) {
+                                System.out.print("Payment failed. Try again? (y/n): ");
+                                if (!readLine().trim().equalsIgnoreCase("y")) {
+                                        cancelUnpaidOrder(buyer, order);
+                                        return;
+                                }
+                        }
                 }
-                System.out.print("Select payment option: ");
-                int paymentChoice = readInt();
-                if (paymentChoice < 1 || paymentChoice > PaymentMethod.values().length) {
-                        System.out.println("Invalid payment option.");
-                        return;
-                }
-                order.makePayment(PaymentMethod.values()[paymentChoice - 1]);
                 order.displayOrder();
                 buyer.addOrderToHistory(order);
                 buyer.getCart().clearCart();
+        }
 
+        // Cancels an order that was never paid for. No stock was deducted, and the cart
+        // is left as it was so the buyer can try again later.
+        private static void cancelUnpaidOrder(Buyer buyer, Order order) {
+                order.updateOrderStatus(OrderStatus.CANCELLED);
+                buyer.addOrderToHistory(order);
+                System.out.println("Order " + order.getOrderId() + " cancelled. No payment was taken.");
         }
 
         // This method allows a buyer to build an order by selecting products directly.
@@ -705,7 +998,10 @@ public class Main {
                         System.out.println("No products available.");
                         return null;
                 }
-                Order order = buyer.startDirectOrder(5000 + (int) (Math.random() * 100));
+                Order order = buyer.startDirectOrder();
+                if (order == null) {
+                        return null;
+                }
                 while (true) {
                         viewProductsByCategory();
                         System.out.print("Enter product ID to add (or 0 to finish): ");
@@ -718,10 +1014,8 @@ public class Main {
                                 System.out.println("Product not found.");
                                 continue;
                         }
-                        System.out.print("Quantity: ");
-                        int quantity = readInt();
+                        int quantity = readQuantity();
                         if (quantity <= 0) {
-                                System.out.println("Quantity must be positive.");
                                 continue;
                         }
                         order.addItem(product, quantity);
@@ -735,23 +1029,10 @@ public class Main {
 
         // This method allows a buyer to add a product to their wishlist.
         private static void addProductToWishlist(Buyer buyer) {
-                if (products.isEmpty()) {
-                        System.out.println("No products available.");
-                        return;
+                Product product = chooseProduct("add to wishlist");
+                if (product != null) {
+                        buyer.addToWishlist(product);
                 }
-                ArrayList<Product> availableProducts = selectProductsByCategory();
-                if (availableProducts.isEmpty()) {
-                        System.out.println("No products available in this selection.");
-                        return;
-                }
-                System.out.print("Enter product ID to add to wishlist: ");
-                int productId = readInt();
-                Product product = findProductInList(productId, availableProducts);
-                if (product == null) {
-                        System.out.println("Invalid product ID for this selection.");
-                        return;
-                }
-                buyer.addToWishlist(product);
         }
 
         // This method allows a buyer to give a review for a product they purchased.
@@ -772,14 +1053,14 @@ public class Main {
                 }
                 int rating;
                 do {
-                        System.out.print("Rating (0-5): ");
+                        System.out.print("Rating (1-5): ");
                         rating = readInt();
-                        if (rating < 0 || rating > 5) {
-                                System.out.println("Rating must be between 0 and 5.");
+                        if (rating < 1 || rating > 5) {
+                                System.out.println("Rating must be between 1 and 5.");
                         }
-                } while (rating < 0 || rating > 5);
+                } while (rating < 1 || rating > 5);
                 System.out.print("Comment: ");
-                String comment = scanner.nextLine().trim();
+                String comment = readLine().trim();
                 buyer.giveReview(product, rating, comment);
         }
 
@@ -793,11 +1074,115 @@ public class Main {
                 return null;
         }
 
+        // This method allows a buyer to raise a customer care ticket, which is then
+        // passed on to an admin.
+        private static void raiseSupportTicket(Buyer buyer) {
+                System.out.print("Describe your issue: ");
+                String issue = readLine().trim();
+                CustomerCare ticket = buyer.raiseTicket(issue);
+                if (ticket == null) {
+                        return;
+                }
+                if (admins.isEmpty()) {
+                        System.out.println("No admin is available right now. Your ticket has been saved.");
+                        return;
+                }
+                admins.get(0).receiveTicket(ticket);
+        }
+
+        // Lists all support tickets and lets the admin open one to read it.
+        // Opening an OPEN ticket moves it to IN_PROGRESS.
+        private static void viewSupportTickets(Admin admin) {
+                admin.viewAllTickets();
+                if (admin.getTickets().isEmpty()) {
+                        return;
+                }
+                System.out.print("Enter ticket ID to open (or 0 to go back): ");
+                int ticketId = readInt();
+                if (ticketId == 0) {
+                        return;
+                }
+                CustomerCare ticket = admin.findTicket(ticketId);
+                if (ticket == null) {
+                        System.out.println("Ticket not found.");
+                        return;
+                }
+                admin.viewTicket(ticket);
+        }
+
+        // Lets the admin reply to a ticket and mark it as resolved.
+        private static void resolveSupportTicket(Admin admin) {
+                admin.viewAllTickets();
+                if (admin.getTickets().isEmpty()) {
+                        return;
+                }
+                System.out.print("Enter ticket ID to resolve (or 0 to go back): ");
+                int ticketId = readInt();
+                if (ticketId == 0) {
+                        return;
+                }
+                CustomerCare ticket = admin.findTicket(ticketId);
+                if (ticket == null) {
+                        System.out.println("Ticket not found.");
+                        return;
+                }
+                if (ticket.isResolved()) {
+                        System.out.println("Ticket " + ticketId + " is already resolved.");
+                        return;
+                }
+                admin.viewTicket(ticket);
+                System.out.print("Enter your reply: ");
+                String reply = readLine().trim();
+                if (reply.isEmpty()) {
+                        System.out.println("Reply cannot be empty. Ticket left unresolved.");
+                        return;
+                }
+                admin.resolveTicket(ticket, reply);
+        }
+
+        // Lets the admin view every product in the system and remove one.
+        private static void manageProducts(Admin admin) {
+                admin.manageProducts();
+                printProductTable(products);
+                if (products.isEmpty()) {
+                        return;
+                }
+                System.out.print("Enter product ID to remove (or 0 to go back): ");
+                int productId = readInt();
+                if (productId == 0) {
+                        return;
+                }
+                Product product = findProductById(productId);
+                if (product == null) {
+                        System.out.println("Product not found.");
+                        return;
+                }
+                System.out.print("Remove " + product.getProductName() + "? (y/n): ");
+                if (!readLine().trim().equalsIgnoreCase("y")) {
+                        System.out.println("Removal cancelled.");
+                        return;
+                }
+                admin.removeProduct(product);
+                products.remove(product);
+                guestCart.removeProduct(product);
+                for (Buyer buyer : buyers) {
+                        buyer.removeProductReferences(product);
+                }
+        }
+
+        // Reads a line of text entered by the user.
+        private static String readLine() {
+                if (scanner.hasNextLine()) {
+                        return scanner.nextLine();
+                }
+                return "";
+        }
+
         // Repeatedly prompts until the user enters a valid integer.
         private static int readInt() {
                 while (true) {
                         try {
-                                int value = Integer.parseInt(scanner.nextLine().trim());
+                                int value = Integer.parseInt(readLine().trim());
                                 return value;
                         } catch (NumberFormatException e) {
                                 System.out.print("Invalid number. Enter again: ");
@@ -809,11 +1194,47 @@ public class Main {
         private static double readDouble() {
                 while (true) {
                         try {
-                                double value = Double.parseDouble(scanner.nextLine().trim());
+                                double value = Double.parseDouble(readLine().trim());
                                 return value;
                         } catch (NumberFormatException e) {
                                 System.out.print("Invalid number. Enter again: ");
                         }
                 }
+        }
+
+        private static boolean validRegistration(String name, String email,
+                        String password, String phone, String address) {
+                if (name.isEmpty() || email.isEmpty() || password.isEmpty()
+                                || phone.isEmpty() || address.isEmpty()) {
+                        System.out.println("All registration fields are required.");
+                        return false;
+                }
+                if (!email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
+                        System.out.println("Enter a valid email address.");
+                        return false;
+                }
+                return true;
+        }
+
+        private static boolean emailExists(String email) {
+                for (Seller seller : sellers) {
+                        if (seller.getEmail().equalsIgnoreCase(email)) {
+                                System.out.println("That email is already registered.");
+                                return true;
+                        }
+                }
+                for (Buyer buyer : buyers) {
+                        if (buyer.getEmail().equalsIgnoreCase(email)) {
+                                System.out.println("That email is already registered.");
+                                return true;
+                        }
+                }
+                for (Admin admin : admins) {
+                        if (admin.getEmail().equalsIgnoreCase(email)) {
+                                System.out.println("That email is already registered.");
+                                return true;
+                        }
+                }
+                return false;
         }
 }

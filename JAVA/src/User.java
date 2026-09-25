@@ -1,5 +1,9 @@
-// This is the User class, which represents a user in the online shopping system. 
-// It contains details such as user ID, name, email, password, phone number, address
+/**
+ * This is the User class, which represents a user in the online shopping
+ * system.
+ * It contains details such as user ID, name, email, password, phone number,
+ * address
+ */
 public class User {
 
     protected int userId;
@@ -9,6 +13,7 @@ public class User {
     protected String phone;
     protected String address;
     protected Role role;
+    protected boolean signedIn;
 
     // Constructors
     public User() {
@@ -31,14 +36,27 @@ public class User {
         this.role = role;
     }
 
+    // Register
+    public void register() {
+        System.out.println(name + " registered successfully as "
+                + (role != null ? role : "USER") + ".");
+    }
+
     // Login
     public void login() {
+        signedIn = true;
         System.out.println(name + " logged in.");
     }
 
     // Logout
     public void logout() {
+        signedIn = false;
         System.out.println(name + " logged out.");
+    }
+
+    // Checks whether the user is currently signed in.
+    public boolean isSignedIn() {
+        return signedIn;
     }
 
     // Update Profile

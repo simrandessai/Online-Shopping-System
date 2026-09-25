@@ -14,7 +14,7 @@ public class Order {
     private Payment payment;
     private OrderStatus orderStatus;
 
-    // Constructor
+    // Constructor: every new order gets a unique ID and starts as PENDING.
     public Order(Buyer buyer) {
 
         this.orderId = nextOrderId++;
@@ -25,25 +25,24 @@ public class Order {
 
     }
 
-    // Optional Constructor (Manual ID)
-    public Order(int orderId, Buyer buyer) {
-
-        this.orderId = orderId;
-        this.buyer = buyer;
-        this.orderDate = LocalDate.now();
-        this.items = new ArrayList<>();
-        this.orderStatus = OrderStatus.PENDING;
-
-    }
-
-    // Add Item to Order
+    // Add Item to Order.
+    // Stock is only checked here; it is deducted once payment succeeds.
     public void addItem(Product product, int quantity) {
-        if (product.getStock() < quantity) {
+        if (product == null || quantity <= 0) {
+            System.out.println("Product and quantity must be valid.");
+            return;
+        }
+        int alreadyInOrder = 0;
+        for (OrderItem item : items) {
+            if (item.getProduct().getProductId() == product.getProductId()) {
+                alreadyInOrder += item.getQuantity();
+            }
+        }
+        if (product.getStock() < alreadyInOrder + quantity) {
             System.out.println("Insufficient stock for " + product.getProductName());
             return;
         }
         items.add(new OrderItem(product, quantity));
-        product.reduceStock(quantity);
     }
 
     // Remove Item from Order
@@ -61,13 +60,33 @@ public class Order {
     }
 
     // Payment Method.
-    public void makePayment(PaymentMethod method) {
+    // On success: stock is reduced and the order becomes CONFIRMED.
+    // On failure: the order stays PENDING and no stock is deducted.
+    public boolean makePayment(PaymentMethod method) {
+        if (orderStatus == OrderStatus.CONFIRMED) {
+            System.out.println("This order has already been paid.");
+            return false;
+        }
+        if (orderStatus == OrderStatus.CANCELLED) {
+            System.out.println("This order has been cancelled.");
+            return false;
+        }
+        if (items.isEmpty() || method == null) {
+            System.out.println("Cannot process payment for an empty order.");
+            return false;
+        }
         payment = new Payment(
                 orderId,
                 method,
                 calculateTotal());
-        payment.processPayment();
-        orderStatus = OrderStatus.CONFIRMED;
+        boolean paid = payment.processPayment();
+        if (paid) {
+            for (OrderItem item : items) {
+                item.getProduct().reduceStock(item.getQuantity());
+            }
+            orderStatus = OrderStatus.CONFIRMED;
+        }
+        return paid;
     }
 
     // Update Order Status

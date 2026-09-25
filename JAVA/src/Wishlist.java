@@ -1,7 +1,9 @@
-import java.util.ArrayList;
 
-// Wishlist class represents a user's wishlist, containing a list of products they are interested in. 
-// It provides methods to add/remove products and display the wishlist.
+/**
+ * The Wishlist class represents a user's wishlist, containing a list of products they are interested in.
+ * It provides methods to add/remove products and display the wishlist.
+ */
+import java.util.ArrayList;
 
 public class Wishlist {
 
@@ -14,15 +16,18 @@ public class Wishlist {
         products = new ArrayList<>();
     }
 
-    // Add product to wishlist
-    public void addProduct(Product product) {
-        if (!products.contains(product))
-            products.add(product);
+    // Add product to wishlist. Returns false if it was null or already there.
+    public boolean addProduct(Product product) {
+        if (product == null || products.contains(product)) {
+            return false;
+        }
+        products.add(product);
+        return true;
     }
 
-    // Remove product from wishlist
-    public void removeProduct(Product product) {
-        products.remove(product);
+    // Remove product from wishlist. Returns true if it was actually there.
+    public boolean removeProduct(Product product) {
+        return products.remove(product);
     }
 
     public void displayWishlist() {

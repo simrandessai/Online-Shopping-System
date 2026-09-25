@@ -1,8 +1,11 @@
+
+/**
+ * This is a class that represents the products in an online shopping system.
+ * It contains details such as the product ID, name, description, price, stock quantity, category, seller, and reviews.
+ * The class provides methods to manage stock, add and remove reviews, calculate average ratings, and display product details.
+ */
 import java.util.ArrayList;
 
-// This  is a class that represents the products in an online shopping system. 
-// It contains details such as the product ID, name, description, price, stock quantity, category, seller, and reviews. 
-// The class provides methods to manage stock, add and remove reviews, calculate average ratings, and display product details.
 public class Product {
     private int productId;
     private String productName;
@@ -32,25 +35,41 @@ public class Product {
         this.stock = stock;
         this.category = category;
         this.seller = seller;
-        reviews = new ArrayList<>();
+        this.reviews = new ArrayList<>();
     }
 
     // Stock Methods
+
+    // Adds (or, with a negative number, removes) stock. Stock can never go below
+    // zero.
     public void updateStock(int quantity) {
+        if (stock + quantity < 0) {
+            System.out.println("Stock cannot go below zero.");
+            return;
+        }
         stock += quantity;
     }
 
-    public void reduceStock(int quantity) {
-        if (stock >= quantity) {
-            stock -= quantity;
-        } else {
-            System.out.println("Insufficient Stock.");
+    // Reduces stock for a sale. Returns true if the stock was reduced,
+    // so the caller (e.g. Order) knows whether the sale can go ahead.
+    public boolean reduceStock(int quantity) {
+        if (quantity <= 0) {
+            System.out.println("Quantity must be greater than zero.");
+            return false;
         }
+        if (stock < quantity) {
+            System.out.println("Insufficient Stock.");
+            return false;
+        }
+        stock -= quantity;
+        return true;
     }
 
     // Review Methods
     public void addReview(Review review) {
-        reviews.add(review);
+        if (review != null) {
+            reviews.add(review);
+        }
     }
 
     public void removeReview(Review review) {
@@ -113,6 +132,10 @@ public class Product {
     }
 
     public void setPrice(double price) {
+        if (price < 0) {
+            System.out.println("Price cannot be negative.");
+            return;
+        }
         this.price = price;
     }
 
@@ -121,6 +144,10 @@ public class Product {
     }
 
     public void setStock(int stock) {
+        if (stock < 0) {
+            System.out.println("Stock cannot be negative.");
+            return;
+        }
         this.stock = stock;
     }
 
@@ -150,8 +177,8 @@ public class Product {
                 "\nDescription: " + description +
                 "\nPrice      : Rs " + price +
                 "\nStock      : " + stock +
-                "\nCategory   : " + category.getCategoryName() +
-                "\nSeller     : " + seller.getName() +
+                "\nCategory   : " + (category != null ? category.getCategoryName() : "N/A") +
+                "\nSeller     : " + (seller != null ? seller.getName() : "N/A") +
                 "\nRating     : " +
                 String.format("%.1f", getAverageRating()) + "/5";
     }

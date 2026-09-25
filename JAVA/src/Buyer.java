@@ -10,6 +10,7 @@ public class Buyer extends User {
     private Cart cart;
     private Wishlist wishlist;
     private ArrayList<Order> orderHistory;
+    private ArrayList<CustomerCare> tickets;
 
     // Constructor
     public Buyer(int userId,
@@ -24,21 +25,26 @@ public class Buyer extends User {
         cart = new Cart(userId);
         wishlist = new Wishlist(userId);
         orderHistory = new ArrayList<>();
+        tickets = new ArrayList<>();
     }
 
     // Cart Methods
 
     public void addToCart(Product product, int quantity) {
-        cart.addProduct(product, quantity);
-        System.out.println(quantity + " x "
-                + product.getProductName()
-                + " added to cart.");
+        if (cart.addProduct(product, quantity)) {
+            System.out.println(quantity + " x "
+                    + product.getProductName()
+                    + " added to cart.");
+        }
     }
 
     public void removeFromCart(Product product) {
-        cart.removeProduct(product);
-        System.out.println(product.getProductName()
-                + " removed from cart.");
+        if (cart.removeProduct(product)) {
+            System.out.println(product.getProductName()
+                    + " removed from cart.");
+        } else {
+            System.out.println("That product isn't in your cart.");
+        }
     }
 
     public void viewCart() {
@@ -51,30 +57,29 @@ public class Buyer extends User {
 
     // Wishlist Methods
     public void addToWishlist(Product product) {
-        wishlist.addProduct(product);
-        System.out.println(product.getProductName()
-                + " added to wishlist.");
+        if (wishlist.addProduct(product)) {
+            System.out.println(product.getProductName()
+                    + " added to wishlist.");
+        } else {
+            System.out.println(product.getProductName()
+                    + " is already in your wishlist.");
+        }
     }
 
     public void removeFromWishlist(Product product) {
-        wishlist.removeProduct(product);
-        System.out.println(product.getProductName()
-                + " removed from wishlist.");
+        if (wishlist.removeProduct(product)) {
+            System.out.println(product.getProductName()
+                    + " removed from wishlist.");
+        } else {
+            System.out.println("That product isn't in your wishlist.");
+        }
     }
 
     public void moveToWishlist(Product product) {
-        boolean inCart = false;
-        for (CartItem item : cart.getItems()) {
-            if (item.getProduct().getProductId() == product.getProductId()) {
-                inCart = true;
-                break;
-            }
-        }
-        if (!inCart) {
+        if (!cart.removeProduct(product)) {
             System.out.println(product.getProductName() + " is not in your cart.");
             return;
         }
-        cart.removeProduct(product);
         wishlist.addProduct(product);
         System.out.println(product.getProductName() + " moved from cart to wishlist.");
     }
@@ -87,26 +92,50 @@ public class Buyer extends User {
         return wishlist;
     }
 
+    public void removeProductReferences(Product product) {
+        if (product == null) {
+            return;
+        }
+        cart.removeProduct(product);
+        wishlist.removeProduct(product);
+    }
+
     // Order Methods
     // Places the order directly from the cart.
-    public Order placeOrder(int orderId) {
+    public Order placeOrder() {
+        if (!isSignedIn()) {
+            System.out.println("Please log in or register before placing an order.");
+            return null;
+        }
         if (cart.getItems().isEmpty()) {
             System.out.println("Cart is empty.");
             return null;
         }
-        Order order = new Order(orderId, this);
+        // Check every item first so a half-built order is never created.
+        for (CartItem item : cart.getItems()) {
+            if (item.getQuantity() <= 0 || item.getQuantity() > item.getProduct().getStock()) {
+                System.out.println("Insufficient stock for " + item.getProduct().getProductName()
+                        + ". The order was not created.");
+                return null;
+            }
+        }
+        Order order = new Order(this);
         for (CartItem item : cart.getItems()) {
             order.addItem(
                     item.getProduct(),
                     item.getQuantity());
         }
-        System.out.println("Order placed successfully.");
+        System.out.println("Order created (status: PENDING). Proceed to payment.");
         return order;
     }
 
     // Starts a direct order without using the cart.
-    public Order startDirectOrder(int orderId) {
-        return new Order(orderId, this);
+    public Order startDirectOrder() {
+        if (!isSignedIn()) {
+            System.out.println("Please log in or register before placing an order.");
+            return null;
+        }
+        return new Order(this);
     }
 
     public void addOrderToHistory(Order order) {
@@ -117,6 +146,18 @@ public class Buyer extends User {
 
     public ArrayList<Order> getOrderHistory() {
         return orderHistory;
+    }
+
+    // Displays every order the buyer has placed.
+    public void viewOrderHistory() {
+        System.out.println("\n ORDER HISTORY ");
+        if (orderHistory.isEmpty()) {
+            System.out.println("You haven't placed any orders yet.");
+            return;
+        }
+        for (Order order : orderHistory) {
+            order.displayOrder();
+        }
     }
 
     // To check if the buyer has purchased a specific product.
@@ -169,8 +210,18 @@ public class Buyer extends User {
             System.out.println("You can only review products you have purchased.");
             return;
         }
-        if (rating < 0 || rating > 5) {
-            System.out.println("Rating should be between 0 and 5.");
+        if (rating < 1 || rating > 5) {
+            System.out.println("Rating should be between 1 and 5.");
+            return;
+        }
+        for (Review existingReview : product.getReviews()) {
+            if (existingReview.getBuyer() == this) {
+                System.out.println("You have already reviewed this product.");
+                return;
+            }
+        }
+        if (comment == null || comment.trim().isEmpty()) {
+            System.out.println("Review comment cannot be empty.");
             return;
         }
         Review review = new Review(
@@ -178,9 +229,44 @@ public class Buyer extends User {
                 this,
                 product,
                 rating,
-                comment);
+                comment.trim());
         product.addReview(review);
         System.out.println("Review submitted successfully.");
+    }
+
+    // Customer Care Methods
+
+    // Raises a new support ticket. The caller passes it on to an admin.
+    public CustomerCare raiseTicket(String issue) {
+        if (!isSignedIn()) {
+            System.out.println("Please log in before raising a support ticket.");
+            return null;
+        }
+        if (issue == null || issue.trim().isEmpty()) {
+            System.out.println("Issue description cannot be empty.");
+            return null;
+        }
+        CustomerCare ticket = new CustomerCare(issue.trim(), this);
+        tickets.add(ticket);
+        System.out.println("Support ticket raised. Your Ticket ID is "
+                + ticket.getTicketId() + ".");
+        return ticket;
+    }
+
+    // Shows the buyer's own tickets along with any admin replies.
+    public void viewTickets() {
+        System.out.println("\n MY SUPPORT TICKETS ");
+        if (tickets.isEmpty()) {
+            System.out.println("You haven't raised any support tickets.");
+            return;
+        }
+        for (CustomerCare ticket : tickets) {
+            System.out.println(ticket);
+        }
+    }
+
+    public ArrayList<CustomerCare> getTickets() {
+        return tickets;
     }
 
     @Override

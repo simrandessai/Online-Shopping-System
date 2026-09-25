@@ -1,9 +1,11 @@
-import java.util.ArrayList;
 
 /**
- * Represents a buyer's shopping cart, holding items before they're
- * checked out into an order.
+ * Represents a shopping cart, holding items before they're checked out into
+ * an order. Buyers have their own cart; visitors who haven't signed in use a
+ * temporary guest cart that is merged into their cart when they sign in.
  */
+import java.util.ArrayList;
+
 public class Cart {
     private int cartId;
     private ArrayList<CartItem> items;
@@ -15,22 +17,38 @@ public class Cart {
     }
 
     // Add product to cart. If the product already exists, increase its quantity.
-    public void addProduct(Product product, int quantity) {
+    public boolean addProduct(Product product, int quantity) {
+        if (product == null || quantity <= 0) {
+            return false;
+        }
         for (CartItem item : items) {
             if (item.getProduct().getProductId() == product.getProductId()) {
+                if (item.getQuantity() + quantity > product.getStock()) {
+                    System.out.println("Cannot add more than the available stock.");
+                    return false;
+                }
                 item.setQuantity(item.getQuantity() + quantity);
-                return;
+                return true;
             }
         }
+        if (quantity > product.getStock()) {
+            System.out.println("Cannot add more than the available stock.");
+            return false;
+        }
         items.add(new CartItem(product, quantity));
+        return true;
     }
 
-    // To remove a product from the cart based on its product ID.
-    public void removeProduct(Product product) {
-        items.removeIf(item -> item.getProduct().getProductId() == product.getProductId());
+    // Removes a product from the cart based on its product ID.
+    // Returns true if something was actually removed.
+    public boolean removeProduct(Product product) {
+        if (product == null) {
+            return false;
+        }
+        return items.removeIf(item -> item.getProduct().getProductId() == product.getProductId());
     }
 
-    // To update the quantity of a specific product in the cart.
+    // Calculates the total price of everything in the cart.
     public double calculateTotal() {
         double total = 0;
         for (CartItem item : items)
