@@ -898,7 +898,7 @@ namespace OnlineShoppingSystem
                 Console.WriteLine("Category not found.");
                 return new List<Product>();
             }
-            Console.WriteLine("\n--- " + selectedCategory.GetCategoryName().ToUpper() + " PRODUCTS ---");
+            Console.WriteLine("\n " + selectedCategory.GetCategoryName().ToUpper() + " PRODUCTS ");
             PrintProductTable(selectedCategory.GetProducts());
             return selectedCategory.GetProducts();
         }
@@ -1166,7 +1166,7 @@ namespace OnlineShoppingSystem
                 Console.WriteLine("You haven't purchased any products yet.");
                 return;
             }
-            Console.WriteLine("\n--- YOUR PURCHASED PRODUCTS ---");
+            Console.WriteLine("\n YOUR PURCHASED PRODUCTS ");
             PrintProductTable(purchasedProducts);
             Console.Write("Enter product ID to review: ");
             int productId = ReadInt();

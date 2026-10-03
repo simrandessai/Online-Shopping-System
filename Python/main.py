@@ -37,8 +37,8 @@ next_product_id = 1021
 next_user_id = 9
 
 
-# Input helpers
 
+# Input helpers
 def prompt(text):
     """Prints a prompt without a trailing newline."""
     print(text, end="", flush=True)
@@ -89,9 +89,7 @@ def truncate(text, max_length):
     return text[:max_length - 3] + "..."
 
 
-# ----------------------------------------------------------------------
 # Demo data
-# ----------------------------------------------------------------------
 def initialize_demo_data():
     """Hardcoded demo data: users, categories, and products."""
     admin = Admin(1, "Admin", "admin@shop.com", "admin123", "9000000000", "Head Office")
@@ -151,9 +149,7 @@ def initialize_demo_data():
     buyers.extend([buyer1, buyer2])
 
 
-# ----------------------------------------------------------------------
 # Main menu
-# ----------------------------------------------------------------------
 def show_main_menu():
     """Main menu, open to everyone. Login is only needed to place an order
     (or to use buyer, seller and admin features)."""
@@ -199,9 +195,7 @@ def show_main_menu():
             print("Invalid option. Please select again.")
 
 
-# ----------------------------------------------------------------------
 # Guest (not signed in) features
-# ----------------------------------------------------------------------
 def add_product_to_guest_cart():
     product = choose_product("add to cart")
     if product is None:
@@ -275,9 +269,7 @@ def merge_guest_cart(buyer):
     print(f"{moved} item(s) from your guest cart were added to your cart.")
 
 
-# ----------------------------------------------------------------------
 # Registration and login
-# ----------------------------------------------------------------------
 def read_registration_details():
     prompt("Name: ")
     name = read_line().strip()
@@ -388,9 +380,7 @@ def email_exists(email):
     return False
 
 
-# ----------------------------------------------------------------------
 # Admin
-# ----------------------------------------------------------------------
 def admin_menu(admin):
     if admin is None:
         return
@@ -538,9 +528,7 @@ def manage_products(admin):
         buyer.remove_product_references(product)
 
 
-# ----------------------------------------------------------------------
 # Seller
-# ----------------------------------------------------------------------
 def seller_menu(seller):
     if seller is None:
         return
@@ -654,9 +642,7 @@ def create_category():
     print("Category created successfully.")
 
 
-# ----------------------------------------------------------------------
 # Buyer
-# ----------------------------------------------------------------------
 def buyer_menu(buyer):
     if buyer is None:
         return
@@ -881,9 +867,7 @@ def raise_support_ticket(buyer):
     admins[0].receive_ticket(ticket)
 
 
-# ----------------------------------------------------------------------
 # Browsing and product selection
-# ----------------------------------------------------------------------
 def print_product_table(product_list):
     """Prints a list of products in a clean tabular format."""
     if not product_list:
