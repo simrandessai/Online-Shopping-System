@@ -1,0 +1,15 @@
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\bin\Debug\net8.0\OnlineShoppingSystem.exe
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\bin\Debug\net8.0\OnlineShoppingSystem.deps.json
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\bin\Debug\net8.0\OnlineShoppingSystem.runtimeconfig.json
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\bin\Debug\net8.0\OnlineShoppingSystem.dll
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\bin\Debug\net8.0\OnlineShoppingSystem.pdb
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.AssemblyInfoInputs.cache
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.AssemblyInfo.cs
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.csproj.CoreCompileInputs.cache
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.sourcelink.json
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.dll
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\refint\OnlineShoppingSystem.dll
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.pdb
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\OnlineShoppingSystem.genruntimeconfig.cache
+C:\Users\simra\OneDrive\Desktop\University\OOTL\Online_Shopping_System(JAVA)\Online-Shopping-System\C#\obj\Debug\net8.0\ref\OnlineShoppingSystem.dll
