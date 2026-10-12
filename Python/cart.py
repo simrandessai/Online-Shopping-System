@@ -29,15 +29,32 @@ class Cart:
         self.items.append(CartItem(product, quantity))
         return True
 
-    # Removes a product from the cart based on its product ID.
-    # Returns True if something was actually removed.
-    def remove_product(self, product):
+    # Returns the CartItem for the given product, or None if not found.
+    def get_item(self, product):
+        if product is None:
+            return None
+        for item in self.items:
+            if item.get_product().get_product_id() == product.get_product_id():
+                return item
+        return None
+
+    # Removes a product or deducts a specific quantity from the cart.
+    # If quantity is None or >= existing quantity, the product is completely removed.
+    # If 0 < quantity < existing quantity, the item quantity is reduced.
+    # Returns True if something was actually removed or deducted.
+    def remove_product(self, product, quantity=None):
         if product is None:
             return False
-        before = len(self.items)
-        self.items = [item for item in self.items
-                      if item.get_product().get_product_id() != product.get_product_id()]
-        return len(self.items) != before
+        for item in self.items:
+            if item.get_product().get_product_id() == product.get_product_id():
+                if quantity is None or quantity >= item.get_quantity():
+                    self.items.remove(item)
+                elif quantity > 0:
+                    item.set_quantity(item.get_quantity() - quantity)
+                else:
+                    return False
+                return True
+        return False
 
     # Calculates the total price of everything in the cart.
     def calculate_total(self):

@@ -36,16 +36,33 @@ namespace OnlineShoppingSystem
             }
         }
 
-        public void RemoveFromCart(Product product)
+        public void RemoveFromCart(Product product, int? quantity = null)
         {
-            if (cart.RemoveProduct(product))
+            CartItem item = cart.GetItem(product);
+            if (item == null)
             {
-                Console.WriteLine(product.GetProductName()
-                        + " removed from cart.");
+                Console.WriteLine("That product isn't in your cart.");
+                return;
+            }
+
+            if (quantity.HasValue && quantity.Value <= 0)
+            {
+                Console.WriteLine("Quantity must be positive.");
+                return;
+            }
+
+            if (quantity.HasValue && quantity.Value < item.GetQuantity())
+            {
+                cart.RemoveProduct(product, quantity.Value);
+                Console.WriteLine(quantity.Value + " x "
+                        + product.GetProductName()
+                        + " removed from cart. Remaining: " + item.GetQuantity());
             }
             else
             {
-                Console.WriteLine("That product isn't in your cart.");
+                cart.RemoveProduct(product);
+                Console.WriteLine(product.GetProductName()
+                        + " removed from cart.");
             }
         }
 

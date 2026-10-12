@@ -195,8 +195,27 @@ namespace OnlineShoppingSystem
             {
                 return;
             }
-            guestCart.RemoveProduct(product);
-            Console.WriteLine(product.GetProductName() + " removed from cart.");
+            CartItem item = guestCart.GetItem(product);
+            if (item == null)
+            {
+                return;
+            }
+            int currentQty = item.GetQuantity();
+            int? qtyToRemove = ReadRemovalQuantity(currentQty);
+            if (qtyToRemove == 0)
+            {
+                return;
+            }
+            if (qtyToRemove.HasValue && qtyToRemove.Value < currentQty)
+            {
+                guestCart.RemoveProduct(product, qtyToRemove.Value);
+                Console.WriteLine(qtyToRemove.Value + " x " + product.GetProductName() + " removed from cart. Remaining: " + item.GetQuantity());
+            }
+            else
+            {
+                guestCart.RemoveProduct(product);
+                Console.WriteLine(product.GetProductName() + " removed from cart.");
+            }
         }
 
         // A visitor tries to place an order: the cart total is shown, then the visitor
@@ -960,6 +979,36 @@ namespace OnlineShoppingSystem
             return quantity;
         }
 
+        private static int? ReadRemovalQuantity(int currentQty)
+        {
+            if (currentQty <= 1)
+            {
+                return null;
+            }
+            Console.Write("Enter quantity to remove (1-" + currentQty + ", or press Enter to remove all): ");
+            string userInput = ReadLine().Trim();
+            if (string.IsNullOrEmpty(userInput) || userInput.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            if (userInput == "0" || userInput.Equals("cancel", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Removal cancelled.");
+                return 0;
+            }
+            if (int.TryParse(userInput, out int qty))
+            {
+                if (qty <= 0)
+                {
+                    Console.WriteLine("Quantity must be positive. Removal cancelled.");
+                    return 0;
+                }
+                return qty;
+            }
+            Console.WriteLine("Invalid quantity. Removal cancelled.");
+            return 0;
+        }
+
         // Shows a cart and lets user pick one of its products by ID.
         private static Product ChooseProductInCart(Cart cart, string action)
         {
@@ -1001,10 +1050,23 @@ namespace OnlineShoppingSystem
         private static void RemoveFromCart(Buyer buyer)
         {
             Product product = ChooseProductInCart(buyer.GetCart(), "remove");
-            if (product != null)
+            if (product == null)
             {
-                buyer.RemoveFromCart(product);
+                return;
             }
+            CartItem item = buyer.GetCart().GetItem(product);
+            if (item == null)
+            {
+                Console.WriteLine("That product isn't in your cart.");
+                return;
+            }
+            int currentQty = item.GetQuantity();
+            int? qtyToRemove = ReadRemovalQuantity(currentQty);
+            if (qtyToRemove == 0)
+            {
+                return;
+            }
+            buyer.RemoveFromCart(product, qtyToRemove);
         }
 
         private static Product FindProductInList(int productId, List<Product> productList)

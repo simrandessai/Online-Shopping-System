@@ -82,6 +82,34 @@ def read_quantity():
     return quantity
 
 
+def read_removal_quantity(current_qty):
+    """Prompts for the quantity to remove when multiple items exist in the cart.
+    Returns:
+        int > 0: specific quantity to remove
+        None: remove all items (user pressed Enter or typed 'all')
+        0: cancel removal
+    """
+    if current_qty <= 1:
+        return None
+    prompt(f"Enter quantity to remove (1-{current_qty}, or press Enter to remove all): ")
+    user_input = read_line().strip()
+    if not user_input or user_input.lower() == "all":
+        return None
+    if user_input == "0" or user_input.lower() == "cancel":
+        print("Removal cancelled.")
+        return 0
+    try:
+        qty = int(user_input)
+        if qty <= 0:
+            print("Quantity must be positive. Removal cancelled.")
+            return 0
+        return qty
+    except ValueError:
+        print("Invalid quantity. Removal cancelled.")
+        return 0
+
+
+
 def truncate(text, max_length):
     """Helps prevent long names from breaking table alignment."""
     if len(text) <= max_length:
@@ -154,7 +182,9 @@ def show_main_menu():
     """Main menu, open to everyone. Login is only needed to place an order
     (or to use buyer, seller and admin features)."""
     while True:
-        print("\nOnline Shopping System")
+        print("____________________________")
+        print("\n   ONLINE SHOPPING SYSTEM   ")
+        print("____________________________")
         print("1. Browse Products")
         print("2. Add Product to Cart")
         print("3. View Cart")
@@ -211,8 +241,20 @@ def remove_from_guest_cart():
     product = choose_product_in_cart(guest_cart, "remove")
     if product is None:
         return
-    guest_cart.remove_product(product)
-    print(f"{product.get_product_name()} removed from cart.")
+    item = guest_cart.get_item(product)
+    if item is None:
+        return
+    current_qty = item.get_quantity()
+    qty_to_remove = read_removal_quantity(current_qty)
+    if qty_to_remove == 0:
+        return
+    if qty_to_remove is not None and qty_to_remove < current_qty:
+        guest_cart.remove_product(product, qty_to_remove)
+        print(f"{qty_to_remove} x {product.get_product_name()} removed from cart. Remaining: {item.get_quantity()}")
+    else:
+        guest_cart.remove_product(product)
+        print(f"{product.get_product_name()} removed from cart.")
+
 
 
 def guest_place_order():
@@ -385,7 +427,9 @@ def admin_menu(admin):
     if admin is None:
         return
     while True:
-        print("\n   ADMIN MENU   ")
+        print("____________________________")
+        print("\n         ADMIN MENU   ")
+        print("____________________________")
         print("1. Delete Seller")
         print("2. Delete Buyer")
         print("3. Manage Products")
@@ -533,7 +577,9 @@ def seller_menu(seller):
     if seller is None:
         return
     while True:
-        print("\n   SELLER MENU   ")
+        print("____________________________")
+        print("\n         SELLER MENU   ")
+        print("____________________________")
         print("1. View Products")
         print("2. Add New Product")
         print("3. Create Category")
@@ -647,7 +693,9 @@ def buyer_menu(buyer):
     if buyer is None:
         return
     while True:
-        print("\n   BUYER MENU   ")
+        print("____________________________")
+        print("\n         BUYER MENU   ")
+        print("____________________________")
         print("1. Browse Products")
         print("2. Add Product to Cart")
         print("3. View Cart")
@@ -738,8 +786,18 @@ def add_product_to_cart(buyer):
 
 def remove_from_cart(buyer):
     product = choose_product_in_cart(buyer.get_cart(), "remove")
-    if product is not None:
-        buyer.remove_from_cart(product)
+    if product is None:
+        return
+    item = buyer.get_cart().get_item(product)
+    if item is None:
+        print("That product isn't in your cart.")
+        return
+    current_qty = item.get_quantity()
+    qty_to_remove = read_removal_quantity(current_qty)
+    if qty_to_remove == 0:
+        return
+    buyer.remove_from_cart(product, qty_to_remove)
+
 
 
 def move_cart_item_to_wishlist(buyer):

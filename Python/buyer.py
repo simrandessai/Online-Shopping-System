@@ -28,11 +28,24 @@ class Buyer(User):
         if self.cart.add_product(product, quantity):
             print(f"{quantity} x {product.get_product_name()} added to cart.")
 
-    def remove_from_cart(self, product):
-        if self.cart.remove_product(product):
-            print(f"{product.get_product_name()} removed from cart.")
-        else:
+    def remove_from_cart(self, product, quantity=None):
+        item = self.cart.get_item(product)
+        if item is None:
             print("That product isn't in your cart.")
+            return False
+
+        if quantity is not None and quantity <= 0:
+            print("Quantity must be positive.")
+            return False
+
+        if quantity is not None and quantity < item.get_quantity():
+            self.cart.remove_product(product, quantity)
+            print(f"{quantity} x {product.get_product_name()} removed from cart. Remaining: {item.get_quantity()}")
+            return True
+        else:
+            self.cart.remove_product(product)
+            print(f"{product.get_product_name()} removed from cart.")
+            return True
 
     def view_cart(self):
         self.cart.display_cart()

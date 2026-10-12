@@ -1,34 +1,18 @@
 #include "Payment.h"
 #include <iostream>
-#include <random>
 #include "Utils.h"
 
 Payment::Payment(int paymentId, PaymentMethod paymentMethod, double amount)
     : paymentId(paymentId), paymentMethod(paymentMethod), amount(amount),
       paymentStatus(PaymentStatus::PENDING) {}
 
-// Returns true and marks it SUCCESSFUL if it went through, otherwise marks it
-// FAILED and returns false.
+// Processes the payment and marks it SUCCESSFUL.
 bool Payment::processPayment() {
-    static std::mt19937 rng{std::random_device{}()};
-    static std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-    bool approved = paymentMethod == PaymentMethod::CASH_ON_DELIVERY ||
-                    dist(rng) >= FAILURE_CHANCE;
-
-    if (approved) {
-        paymentStatus = PaymentStatus::SUCCESSFUL;
-        std::cout << "\nPayment Successful\n";
-        std::cout << "Amount : Rs " << util::num(amount) << "\n";
-        std::cout << "Method : " << ::toString(paymentMethod) << "\n";
-        return true;
-    }
-
-    paymentStatus = PaymentStatus::FAILED;
-    std::cout << "\nPayment Failed\n";
+    paymentStatus = PaymentStatus::SUCCESSFUL;
+    std::cout << "\nPayment Successful\n";
     std::cout << "Amount : Rs " << util::num(amount) << "\n";
     std::cout << "Method : " << ::toString(paymentMethod) << "\n";
-    return false;
+    return true;
 }
 
 std::string Payment::toString() const {

@@ -6,10 +6,6 @@
 
 class Payment {
 private:
-    // Simulated chance that an online payment is declined (Cash on Delivery never
-    // fails). Set to 0 to make every payment succeed.
-    static constexpr double FAILURE_CHANCE = 0.10;
-
     int paymentId;
     PaymentMethod paymentMethod;
     double amount;

@@ -8,11 +8,6 @@ namespace OnlineShoppingSystem
     /// </summary>
     public class Payment
     {
-        // Simulated chance that an online payment is declined (Cash on Delivery never fails).
-        // Set to 0 to make every payment succeed.
-        private static readonly double FAILURE_CHANCE = 0.10;
-        private static readonly Random random = new Random();
-
         private int paymentId;
         private PaymentMethod paymentMethod;
         private double amount;
@@ -27,27 +22,14 @@ namespace OnlineShoppingSystem
             this.paymentStatus = PaymentStatus.PENDING;
         }
 
-        // Processes the payment. Returns true and marks it SUCCESSFUL if it went
-        // through, otherwise marks it FAILED and returns false.
+        // Processes the payment. Returns true and marks it SUCCESSFUL.
         public bool ProcessPayment()
         {
-            bool approved = paymentMethod == PaymentMethod.CASH_ON_DELIVERY
-                    || random.NextDouble() >= FAILURE_CHANCE;
-
-            if (approved)
-            {
-                paymentStatus = PaymentStatus.SUCCESSFUL;
-                Console.WriteLine("\nPayment Successful");
-                Console.WriteLine("Amount : Rs " + amount);
-                Console.WriteLine("Method : " + paymentMethod);
-                return true;
-            }
-
-            paymentStatus = PaymentStatus.FAILED;
-            Console.WriteLine("\nPayment Failed");
+            paymentStatus = PaymentStatus.SUCCESSFUL;
+            Console.WriteLine("\nPayment Successful");
             Console.WriteLine("Amount : Rs " + amount);
             Console.WriteLine("Method : " + paymentMethod);
-            return false;
+            return true;
         }
 
         public int GetPaymentId() { return paymentId; }

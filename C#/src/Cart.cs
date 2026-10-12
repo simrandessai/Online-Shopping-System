@@ -49,16 +49,42 @@ namespace OnlineShoppingSystem
             return true;
         }
 
-        // Removes a product from the cart based on its product ID.
-        // Returns true if something was actually removed.
-        public bool RemoveProduct(Product product)
+        // Returns the CartItem for the given product, or null if not found.
+        public CartItem GetItem(Product product)
+        {
+            if (product == null)
+            {
+                return null;
+            }
+            return items.Find(item => item.GetProduct().GetProductId() == product.GetProductId());
+        }
+
+        // Removes a product or deducts a specific quantity from the cart.
+        // If quantity is null or >= existing quantity, the product is completely removed.
+        // If 0 < quantity < existing quantity, the item quantity is reduced.
+        // Returns true if an item was removed or its quantity was deducted, false otherwise.
+        public bool RemoveProduct(Product product, int? quantity = null)
         {
             if (product == null)
             {
                 return false;
             }
-            int removedCount = items.RemoveAll(item => item.GetProduct().GetProductId() == product.GetProductId());
-            return removedCount > 0;
+            CartItem item = GetItem(product);
+            if (item == null)
+            {
+                return false;
+            }
+            if (!quantity.HasValue || quantity.Value >= item.GetQuantity())
+            {
+                items.Remove(item);
+                return true;
+            }
+            if (quantity.Value > 0)
+            {
+                item.SetQuantity(item.GetQuantity() - quantity.Value);
+                return true;
+            }
+            return false;
         }
 
         // Calculates the total price of everything in the cart.
